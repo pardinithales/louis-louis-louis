@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loader.classList.remove('hidden');
 
         try {
-            // A URL agora aponta para o subdomínio da API em produção
-            const apiUrl = `https://app-louis.tpfbrain.com/infer/`;
+            // A URL agora aponta para um caminho relativo, eliminando o CORS
+            const apiUrl = `/api/infer/`;
             
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -64,8 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let imageHtml = '';
             if (syndrome.suggested_image) {
-                // A URL da imagem também aponta para o domínio da API
-                const imageUrl = `https://app-louis.tpfbrain.com/images/${syndrome.suggested_image}`;
+                // A URL da imagem também usa um caminho relativo
+                const imageUrl = `/api/images/${syndrome.suggested_image}`;
                 imageHtml = `<img src="${imageUrl}" alt="${syndrome.name || 'Syndrome Image'}">`;
             }
 
