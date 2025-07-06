@@ -3,4 +3,5 @@ uvicorn
 sqlalchemy
 google-generativeai
 pandas
-fpdf2 
+fpdf2
+python-dotenv
