@@ -44,17 +44,12 @@ services:
       - louis_net
     labels:
       - "traefik.enable=true"
-      # Nova regra: Roteia para o backend se o Host for louis.tpfbrain.com E o caminho começar com /api
-      - "traefik.http.routers.louis-backend.rule=Host(`louis.tpfbrain.com`) && PathPrefix(`/api`)"
-      # Adiciona prioridade para garantir que esta regra seja avaliada antes da regra do frontend
-      - "traefik.http.routers.louis-backend.priority=2"
+      # Nova regra: Roteia para o backend se o Host for app-louis.tpfbrain.com
+      - "traefik.http.routers.louis-backend.rule=Host(`app-louis.tpfbrain.com`)"
       - "traefik.http.routers.louis-backend.entrypoints=websecure"
       - "traefik.http.routers.louis-backend.tls.certresolver=myresolver"
       - "traefik.http.services.louis-backend.loadbalancer.server.port=8000"
       - "traefik.network=louis_net"
-      # Middleware para remover o prefixo /api antes de enviar para o container
-      - "traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes=/api"
-      - "traefik.http.routers.louis-backend.middlewares=strip-api-prefix"
 
   frontend:
     build:

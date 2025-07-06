@@ -32,7 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
             return 'http://localhost:8000'; // Ambiente de desenvolvimento local
         }
-        return '/api'; // Ambiente de produção (usado pelo Traefik)
+        // Aponta para o subdomínio da API em produção
+        return 'https://app-louis.tpfbrain.com';
     };
     const API_BASE_URL = getApiBaseUrl();
 
