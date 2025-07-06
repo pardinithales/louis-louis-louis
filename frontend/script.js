@@ -26,8 +26,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteAnswersBtn = document.getElementById('delete-answers-btn');
     const downloadCsvBtn = document.getElementById('download-csv-btn');
 
+    // Detecta o ambiente para definir a URL base da API
+    const getApiBaseUrl = () => {
+        const hostname = window.location.hostname;
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            return 'http://localhost:8000'; // Ambiente de desenvolvimento local
+        }
+        return '/api'; // Ambiente de produção (usado pelo Traefik)
+    };
+    const API_BASE_URL = getApiBaseUrl();
 
-    const API_BASE_URL = 'http://localhost:8000';
     // As variáveis de sessão/usuário agora são lidas dentro das funções para garantir que estão sempre atualizadas.
 
     // --- Lógica das Abas ---
