@@ -19,7 +19,7 @@ app = FastAPI(
 # Em um ambiente de produção, é recomendado restringir para domínios específicos.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permite todas as origens
+    allow_origins=["https://louis.tpfbrain.com"],  # Permite apenas o seu frontend
     allow_credentials=True,
     allow_methods=["*"],  # Permite todos os métodos (GET, POST, etc.)
     allow_headers=["*"],  # Permite todos os cabeçalhos
