@@ -1,31 +1,76 @@
 version: '3.8'
 
 services:
+  traefik:
+    image: "traefik:v2.10"
+    container_name: "traefik-louis"
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      # !!! IMPORTANTE: Troque pelo seu email para o Let's Encrypt !!!
+      - "--certificatesresolvers.myresolver.acme.email=pardinithales@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      # Redireciona todo tráfego HTTP para HTTPS
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+    ports:
+      # Portas para tráfego web (HTTP e HTTPS)
+      - "80:80"
+      - "443:443"
+      # Porta para o Dashboard do Traefik (opcional, para debug)
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "letsencrypt_data:/letsencrypt"
+    networks:
+      - louis_net
+    restart: always
+
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    container_name: louis-backend
-    ports:
-      - "8000:8000"
+    container_name: louis-backend-prod
     restart: always
-    # O volume abaixo garante que o contêiner sempre tenha a versão mais recente
-    # das imagens sem precisar reconstruir a imagem do backend.
     volumes:
       - ./images:/app/images
     environment:
-      # Você PRECISA fornecer sua chave da API do Gemini.
-      # Crie um arquivo .env na raiz do projeto e adicione a linha:
-      # GEMINI_API_KEY=sua_chave_aqui
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+    networks:
+      - louis_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.louis-backend.rule=Host(`app-louis.tpfbrain.com`)"
+      - "traefik.http.routers.louis-backend.entrypoints=websecure"
+      - "traefik.http.routers.louis-backend.tls.certresolver=myresolver"
+      - "traefik.http.services.louis-backend.loadbalancer.server.port=8000"
+      - "traefik.network=louis_net"
 
   frontend:
     build:
       context: .
       dockerfile: frontend/Dockerfile
-    container_name: louis-frontend
-    ports:
-      - "8080:80"
+    container_name: louis-frontend-prod
     restart: always
     depends_on:
-      - backend 
+      - backend
+    networks:
+      - louis_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.louis-frontend.rule=Host(`louis.tpfbrain.com`)"
+      - "traefik.http.routers.louis-frontend.entrypoints=websecure"
+      - "traefik.http.routers.louis-frontend.tls.certresolver=myresolver"
+      - "traefik.http.services.louis-frontend.loadbalancer.server.port=80"
+      - "traefik.network=louis_net"
+
+volumes:
+  letsencrypt_data:
+
+networks:
+  louis_net:
+    driver: bridge 

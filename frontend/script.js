@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loader.classList.remove('hidden');
 
         try {
-            // A URL agora é dinâmica, usando o mesmo hostname da página, mas na porta 8000
-            const apiUrl = `${window.location.protocol}//${window.location.hostname}:8000/infer/`;
+            // A URL agora aponta para o subdomínio da API em produção
+            const apiUrl = `https://app-louis.tpfbrain.com/infer/`;
             
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -64,8 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let imageHtml = '';
             if (syndrome.suggested_image) {
-                // A URL da imagem também é dinâmica
-                const imageUrl = `${window.location.protocol}//${window.location.hostname}:8000/images/${syndrome.suggested_image}`;
+                // A URL da imagem também aponta para o domínio da API
+                const imageUrl = `https://app-louis.tpfbrain.com/images/${syndrome.suggested_image}`;
                 imageHtml = `<img src="${imageUrl}" alt="${syndrome.name || 'Syndrome Image'}">`;
             }
 
