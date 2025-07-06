@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LouiS - Neurological Syndrome Inference</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div id="logo-wrapper">
+                <img src="assets/louis-logo.png" alt="LouiS Logo">
+            </div>
+            <h1>LouiS</h1>
+        </div>
+    </header>
+
+    <main class="container">
+        <section id="query-section">
+            <h2>AI-Powered Stroke Syndrome Analysis</h2>
+            <p>Accelerate your differential diagnosis. Input clinical findings to receive an AI-driven analysis of potential stroke syndromes, complete with associated vasculature and neuroanatomical correlates.</p>
+            <textarea id="clinical-query" placeholder="e.g., patient presents with acute onset of right-sided weakness and facial droop..."></textarea>
+            <button id="search-button">Analyze Case</button>
+        </section>
+
+        <section id="results-section">
+            <div id="loader" class="hidden">
+                <div class="spinner"></div>
+                <p>Analyzing... This may take a moment.</p>
+            </div>
+            <div id="results-container"></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 LouiS. All rights reserved. For educational and research purposes only. Developed by Thales Pardini Fagundes (pardinithales@gmail.com)</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html> 

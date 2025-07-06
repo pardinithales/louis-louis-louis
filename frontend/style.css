@@ -1,0 +1,261 @@
+:root {
+    --primary-color: #0d3b66; /* Deep Blue */
+    --secondary-color: #faf0ca; /* Creamy Yellow */
+    --accent-color: #f95738;  /* Burnt Orange */
+    --background-color: #f4f7f9; /* Light Gray */
+    --surface-color: #ffffff;   /* White */
+    --text-color: #333333;
+    --border-color: #dee2e6; /* Lighter border */
+    --shadow-color: rgba(0, 0, 0, 0.08); /* Softer shadow */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    /* Subtle gradient background for depth */
+    background: linear-gradient(180deg, #eaf2f8 0%, #f4f7f9 20%);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* --- Header --- */
+header {
+    background-color: transparent; /* Make header transparent */
+    color: var(--primary-color);   /* Adjust text color to be visible on light background */
+    padding: 20px 0;
+    box-shadow: none; /* Remove shadow for a flatter look */
+    position: static; /* Let it scroll with the page */
+}
+
+header .container {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+#logo-wrapper {
+    height: 90px;
+    width: 90px;
+    background-color: var(--surface-color);
+    border-radius: 18px; /* Smoothly rounded rectangle */
+    padding: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0; /* Prevents the logo from shrinking */
+    transition: transform 0.3s ease;
+}
+
+#logo-wrapper:hover {
+    transform: scale(1.05); /* Slight zoom effect on hover */
+}
+
+#logo-wrapper img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+/* --- Main Content --- */
+main {
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+
+h2 {
+    color: var(--primary-color);
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+}
+
+#query-section p {
+    margin-bottom: 20px;
+    max-width: 80ch;
+}
+
+#query-section {
+    background-color: var(--surface-color);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.07);
+    margin-bottom: 40px;
+}
+
+textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-family: inherit;
+    font-size: 1rem;
+    background-color: var(--surface-color);
+    resize: vertical;
+    margin-bottom: 20px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+}
+
+textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(249, 87, 56, 0.2);
+}
+
+button {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    display: block;
+    width: 100%;
+    max-width: 300px; /* Slightly wider button */
+    margin: 0; /* Align to the left */
+}
+
+button:hover {
+    background-color: #e04a2d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(249, 87, 56, 0.3); /* Add shadow on hover */
+}
+
+/* --- Results --- */
+#results-section {
+    margin-top: 40px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 40px;
+    text-align: center;
+}
+
+.spinner {
+    border: 6px solid var(--border-color);
+    border-top: 6px solid var(--accent-color);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+#loader p {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#results-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+}
+
+.syndrome-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.syndrome-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.syndrome-card h3 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-bottom: 20px; /* More space below title */
+}
+
+.syndrome-card p {
+    margin-bottom: 12px; /* Adjusted spacing */
+    font-size: 1.05rem; /* Slightly larger text */
+}
+
+.syndrome-card strong {
+    font-weight: 700; /* Bolder */
+    color: var(--primary-color); /* Use primary color for labels */
+}
+
+.syndrome-card img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+/* Estilo para destacar o card de síndrome hemorrágica */
+.hemorrhagic-card {
+    border-left: 5px solid #E57373; /* Uma borda vermelha mais forte à esquerda */
+    background-color: #FFEBEE; /* Um fundo vermelho bem claro */
+}
+
+.hemorrhagic-card:hover {
+    border-left-color: #D32F2F; /* Darken border on hover */
+    box-shadow: 0 8px 24px rgba(229, 115, 115, 0.2);
+}
+
+/* --- Footer --- */
+footer {
+    background-color: transparent; /* Match the body background */
+    text-align: center;
+    padding: 40px 20px;
+    margin-top: 50px;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.8rem; /* Adjusted for smaller screens */
+    }
+
+    #logo-wrapper {
+        height: 70px;
+        width: 70px;
+        border-radius: 14px;
+    }
+
+    button {
+        max-width: 100%;
+    }
+} 

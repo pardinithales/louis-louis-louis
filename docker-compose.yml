@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: louis-backend
+    ports:
+      - "8000:8000"
+    restart: always
+    # O volume abaixo garante que o contêiner sempre tenha a versão mais recente
+    # das imagens sem precisar reconstruir a imagem do backend.
+    volumes:
+      - ./images:/app/images
+    environment:
+      # Você PRECISA fornecer sua chave da API do Gemini.
+      # Crie um arquivo .env na raiz do projeto e adicione a linha:
+      # GEMINI_API_KEY=sua_chave_aqui
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: louis-frontend
+    ports:
+      - "8080:80"
+    restart: always
+    depends_on:
+      - backend 
