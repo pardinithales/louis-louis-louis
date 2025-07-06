@@ -2,6 +2,7 @@ import logging
 import pandas as pd
 from io import StringIO
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import os
 
 from fastapi import FastAPI, HTTPException, Depends
@@ -185,8 +186,8 @@ def generate_consent_pdf(request: AdminActionRequest, db: Session = Depends(get_
     Usa o campo 'password' do AdminActionRequest para passar o 'user_identifier'.
     """
     user_identifier = request.password
-    timestamp = datetime.now()
-    date_str = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = datetime.now(ZoneInfo("America/Sao_Paulo"))
+    date_str = timestamp.strftime("%d/%m/%Y %H:%M:%S")
     
     pdf = FPDF()
     pdf.add_page()
