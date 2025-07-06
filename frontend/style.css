@@ -24,9 +24,10 @@ body {
 }
 
 .container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 20px;
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+    width: 100%;
 }
 
 /* --- Header --- */
@@ -83,6 +84,7 @@ h2 {
     color: var(--primary-color);
     font-size: 1.8rem;
     margin-bottom: 10px;
+    text-align: center;
 }
 
 #query-section p {
@@ -243,6 +245,274 @@ footer {
     color: #6c757d;
 }
 
+/* --- Abas --- */
+.tabs {
+    display: flex;
+    border-bottom: 2px solid #ddd;
+    margin-bottom: 1rem;
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: #555;
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-button.active {
+    color: #007BFF;
+    border-bottom: 2px solid #007BFF;
+}
+
+.tab-button:hover {
+    background-color: #f7f7f7;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* --- Container de Consentimento --- */
+.consent-container {
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+#consent-checkbox {
+    margin-right: 0.5rem;
+    cursor: pointer;
+}
+
+/* --- Lista de Casos de Validação --- */
+.validation-case-list {
+    max-height: 60vh;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+
+.validation-case-item {
+    background-color: #f9f9f9;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    border-left: 4px solid #007BFF;
+}
+
+.validation-case-item:hover {
+    background-color: #e9ecef;
+}
+
+.validation-case-item h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.validation-case-item p {
+    font-size: 0.95rem;
+    color: #555;
+    white-space: pre-wrap; /* Mantém a formatação do texto */
+}
+
+/* --- Estilos para o Modal de Consentimento --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.consent-text-box {
+    border: 1px solid #ccc;
+    padding: 1rem;
+    margin: 1rem 0;
+    max-height: 40vh;
+    overflow-y: scroll;
+    background-color: #f9f9f9;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.consent-action {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.consent-action label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+#cpf-input {
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    text-align: center;
+    letter-spacing: 0.5em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 150px;
+    margin-bottom: 1rem;
+}
+
+.button-primary {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.button-primary:hover {
+    background-color: #0056b3;
+}
+
+/* --- Estilos para a área de resposta da validação --- */
+.validation-answer-area {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.validation-answer-area textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    margin-bottom: 0.5rem;
+    font-family: inherit;
+}
+
+.validation-answer-area button {
+    align-self: flex-end;
+    background-color: #28a745;
+}
+
+.validation-answer-area button:hover {
+    background-color: #218838;
+}
+
+.validation-answer-area button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* --- Estilos para os Cards de Resultado --- */
+#results-container {
+    margin-top: 2rem;
+}
+
+.result-card {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.result-card h4 {
+    margin-top: 0;
+    color: #0056b3;
+}
+
+.card-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.card-image {
+    flex: 1 1 250px; /* Flex-grow, flex-shrink, base size */
+    min-width: 200px;
+}
+
+.card-image img {
+    width: 100%;
+    max-width: 300px; /* Define um tamanho máximo para a imagem */
+    height: auto;
+    border-radius: 6px;
+    border: 1px solid #eee;
+}
+
+.card-details {
+    flex: 2 1 300px; /* Ocupa mais espaço que a imagem */
+}
+
+.card-details p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+.syndrome-section {
+    /* As propriedades flex não são mais necessárias aqui com o grid */
+    min-width: initial;
+}
+
+.hemorrhagic-section .result-card {
+    border-left: 5px solid #dc3545; /* Vermelho para indicar perigo/hemorragia */
+}
+
+.submission-feedback {
+    margin-top: 0.5rem;
+    padding: 0.8rem;
+    background-color: #eaf3ff;
+    color: #0056b3;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    text-align: center;
+    border-left: 4px solid #007BFF;
+}
+
 /* --- Responsive Design --- */
 @media (max-width: 768px) {
     header h1 {
@@ -258,4 +528,58 @@ footer {
     button {
         max-width: 100%;
     }
+} 
+
+/* --- Admin --- */
+.admin-access-container {
+    margin: 1rem 0;
+    text-align: center;
+}
+
+#admin-access-btn {
+    background: none;
+    border: 1px solid #6c757d;
+    color: #6c757d;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.admin-panel {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.admin-panel button {
+    margin-right: 1rem;
+}
+
+.danger-btn {
+    background-color: #dc3545;
+    color: white;
+}
+.danger-btn:hover {
+    background-color: #c82333;
+}
+
+#view-answers-modal .modal-content {
+    max-width: 90vw;
+}
+
+.user-answers h4 {
+    border-bottom: 2px solid #007BFF;
+    padding-bottom: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+.answer-item {
+    background-color: #f9f9f9;
+    padding: 0.8rem;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid #6c757d;
 } 

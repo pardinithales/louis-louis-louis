@@ -20,20 +20,81 @@
     </header>
 
     <main class="container">
-        <section id="query-section">
-            <h2>AI-Powered Stroke Syndrome Analysis</h2>
-            <p>Accelerate your differential diagnosis. Input clinical findings to receive an AI-driven analysis of potential stroke syndromes, complete with associated vasculature and neuroanatomical correlates.</p>
-            <textarea id="clinical-query" placeholder="e.g., patient presents with acute onset of right-sided weakness and facial droop..."></textarea>
-            <button id="search-button">Analyze Case</button>
-        </section>
+        <div class="tabs">
+            <button class="tab-button active" id="inference-tab">Inferência</button>
+            <button class="tab-button" id="validation-tab">Validação</button>
+        </div>
 
-        <section id="results-section">
-            <div id="loader" class="hidden">
-                <div class="spinner"></div>
-                <p>Analyzing... This may take a moment.</p>
+        <div class="tab-content active" id="inference-content">
+            <h1>Louis - Sistema de Inferência Neurológica</h1>
+            <textarea id="clinical-case" placeholder="Cole aqui o quadro clínico..."></textarea>
+            <button id="submit-btn">Analisar</button>
+            <div id="loader" class="loader" style="display: none;">
+                <p>Analisando o caso clínico... Isso pode levar alguns segundos.</p>
             </div>
+            <!-- Container de Resultados REINSERIDO AQUI -->
             <div id="results-container"></div>
-        </section>
+        </div>
+
+        <div class="tab-content" id="validation-content">
+            <!-- Modal de Consentimento para Pesquisa -->
+            <div id="validation-consent-modal" class="modal-overlay">
+                <div class="modal-content">
+                    <h2>Consentimento para Participação em Pesquisa</h2>
+                    <div class="consent-text-box">
+                        <p>Você está sendo convidado(a) a participar de um projeto de pesquisa. Antes de assinar o termo de consentimento para a sua participação, por favor leia com atenção todas as informações.</p>
+
+                        <p><strong>DESCRIÇÃO GERAL DA PESQUISA</strong><br>
+                        Você está sendo convidado(a) a participar da validação de uma ferramenta de diagnóstico sindrômico e topográfico em Neurologia Vascular. O diagnóstico topográfico em Neurologia representa uma faceta essencial na prática clínica, integrando um profundo conhecimento em Neuroanatomia e Semiologia. Este tipo de diagnóstico é crucial para a correta interpretação de neuroimagem, sendo indispensável na avaliação de distúrbios neurológicos complexos como o Acidente Vascular Cerebral (AVC). A habilidade de localizar precisamente uma lesão no sistema nervoso não só direciona o manejo clínico apropriado, mas também pode guiar as intervenções terapêuticas. Objetivo da pesquisa: Validar uma ferramenta digital de diagnóstico sindrômico e topográfico em Neurologia Vascular.</p>
+                        
+                        <p><strong>PROCEDIMENTOS DO ESTUDO</strong><br>
+                        Se você aceitar participar desse estudo, você fará: Um questionário anonimizado com casos simulados de pacientes com histórico de doença cerebrovascular. Você responderá a questões sobre o provável diagnóstico sindrômico e topográfico de cada caso hipotético. Suas respostas não serão identificadas, reveladas ou usadas para qualquer propósito senão o especificado neste termo.</p>
+                        
+                        <p><strong>Riscos em participar da pesquisa:</strong> A participação na pesquisa não oferece riscos diretos ou indiretos aos sujeitos de pesquisa, exceto pelo risco de perda do sigilo dos dados ou eventual desconforto pelo tempo que emanará ao responder aos casos.<br>
+                        <strong>Benefícios:</strong> Não há benefícios diretos aos participantes. No entanto, esta pesquisa se propõe a oferecer uma plataforma para auxílio no diagnóstico sindrômico e topográfico. Os pesquisadores supõem que a ferramenta melhorará a acurácia desses diagnósticos em Neurologia.<br>
+                        <strong>Acesso a resultados parciais ou finais da pesquisa:</strong> Você tem o direito, caso solicite, a ter acesso aos resultados da pesquisa.<br>
+                        <strong>Custos envolvidos pela participação da pesquisa:</strong> Sua participação na pesquisa não envolve custos, tampouco compensações financeiras.</p>
+                        
+                        <p><strong>PARTICIPAÇÃO VOLUNTÁRIA</strong><br>
+                        Você é livre para participar ou desistir do estudo em qualquer momento. Se você tiver qualquer dúvida quanto ao desenvolvimento da pesquisa ou aos seus direitos como participante, poderá entrar em contato com os pesquisadores responsáveis (Dr. Thales Pardini ou Dra. Millene Rodrigues Camilo, Rua Bernardino de Campos, 1000, Centro, Ribeirão Preto/SP, no telefone (16) 36023798). A realização deste estudo foi autorizada pelo Comitê de Ética em Pesquisa (CEP) do Hospital das Clínicas da Faculdade de Medicina de Ribeirão Preto, Universidade de São Paulo. O papel do CEP é supervisionar estudos em seres humanos e garantir que os direitos, a segurança e bem-estar de todos os participantes sejam protegidos.<br>
+                        Em caso de qualquer dúvida ou reclamação a respeito deste estudo, você também poderá contatar o CEP, de segunda à sexta, das 08 às 17 h (Campus Universitário, SN, Monte Alegre, Ribeirão Preto/SP), no telefone (16) 3602-2228. Para maiores informações sobre os direitos dos participantes de pesquisa, leia a Cartilha dos Direitos dos Participantes de Pesquisa elaborada pela Comissão Nacional de Ética em Pesquisa (Conep), que está disponível para leitura no site: http://conselho.saude.gov.br/images/comissoes/conep/img/boletins/Cartilha_Direitos_Participantes_ de_Pesquisa_2020.pdf Assinando esse consentimento, você não desiste de nenhum de seus direitos. Além disso, você não libera os investigadores de suas responsabilidades legais e profissionais no caso de alguma situação que lhe prejudique.</p>
+                        
+                        <p><strong>CONFIDENCIALIDADE</strong><br>
+                        Todas as informações coletadas neste estudo serão confidenciais. Nenhum dado sensível que possa identificá-lo será utilizado. Portanto, asseguramos que seus dados serão utilizados especificamente para esta pesquisa, a sua confidencialidade será resguardada pela equipe do centro de pesquisa, conforme disposto na Res. CNS 466/12 e na Lei Geral de Proteção de Dados (Lei n. 13.709/2018). CONSENTIMENTO Ao consentir, você confirma ter lido e compreendido este documento, autorizando o uso e divulgação das informações obtidas nas condições de preservação da confidencialidade e anonimato, sem renunciar a qualquer um de seus direitos legais. Ao concordar, será disponibilizada uma cópia desse documento.</p>
+                        
+                        <p>O consentimento será dado ao selecionar a opção "Concordo em participar".</p>
+                    </div>
+                    <div class="consent-action">
+                        <label for="cpf-input">Para participar, digite os <strong>últimos 5 dígitos</strong> do seu CPF:</label>
+                        <input type="text" id="cpf-input" maxlength="5" placeholder="_ _ _ _ _">
+                        <button id="consent-agree-btn" class="button-primary">Concordo em Participar</button>
+                        <p id="cpf-error" class="error-message" style="display: none;">Por favor, insira 5 dígitos numéricos.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conteúdo visível apenas após o consentimento -->
+            <div id="validation-cases-container" style="display: none;">
+                <div id="user-group-notification" class="submission-feedback" style="display: none; margin-bottom: 1rem;"></div>
+                <h2>Casos Clínicos para Validação</h2>
+                <p>Digite sua hipótese diagnóstica para cada caso e clique em "Salvar Resposta".</p>
+                
+                <div class="admin-access-container">
+                    <button id="admin-access-btn">Acessar área administrativa</button>
+                </div>
+
+                <div id="admin-panel" class="admin-panel" style="display: none;">
+                    <h3>Painel Administrativo</h3>
+                    <button id="view-answers-btn">Ver Respostas Armazenadas</button>
+                    <button id="download-csv-btn">Download Dataset (CSV)</button>
+                    <button id="delete-answers-btn" class="danger-btn">Apagar Todas as Respostas</button>
+                </div>
+
+                <div id="validation-case-list" class="validation-case-list">
+                    <!-- Casos de validação serão inseridos aqui pelo JavaScript -->
+                </div>
+            </div>
+        </div>
     </main>
 
     <footer>

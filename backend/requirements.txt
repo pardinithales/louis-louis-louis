@@ -1,4 +1,6 @@
 fastapi
-uvicorn[standard]
+uvicorn
+sqlalchemy
 google-generativeai
-python-dotenv 
+pandas
+fpdf2 

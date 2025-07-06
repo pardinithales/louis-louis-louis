@@ -92,13 +92,17 @@ async def get_syndrome_inference(query: str, context_snippets: str, image_list: 
     Available Image Files: --- {image_list_str} ---
 
     Your main goal is to identify the most likely neurological syndromes.
+    - The syndrome `name` must be a standard, common name (e.g., "Weber's Syndrome"), not a long description.
+    - For `suggested_image`, you MUST perform a self-correction step: does the image filename truly and accurately represent the syndrome's pathology and location?
+    - If no image is a clear match, you MUST return `null` for the `suggested_image` field. It is better to provide no image than an incorrect one.
+    
     Populate two distinct lists:
     1.  `ischemic_syndromes`: A list of up to **four (4)** of the most probable clinically distinct ISCHEMIC syndromes. If you are very confident in one, you can provide fewer.
     2.  `hemorrhagic_syndromes`: A list of up to **two (2)** of the most probable HEMORRHAGIC syndromes.
 
     For each syndrome in both lists:
     - Provide a concise justification (`reasoning`) based ONLY on the provided context snippets.
-    - Select **exactly one** illustrative image filename from the provided list. The filename must be an EXACT match.
+    - Select **exactly one** illustrative image filename from the provided list or `null`. The filename must be an EXACT match.
     - **Do not use the same image filename for more than one syndrome.**
 
     If no relevant syndromes are found based on the context, return empty lists.

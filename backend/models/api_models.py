@@ -1,11 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 
 class InferenceRequest(BaseModel):
-    """
-    Model for the incoming API request.
-    Expects a 'query' field with the clinical signs.
-    """
     query: str
 
 class Syndrome(BaseModel):
@@ -25,4 +21,28 @@ class InferenceResponse(BaseModel):
     Returns separate lists for ischemic and hemorrhagic syndromes.
     """
     ischemic_syndromes: List[Syndrome]
-    hemorrhagic_syndromes: List[Syndrome] 
+    hemorrhagic_syndromes: List[Syndrome]
+
+class ValidationCaseResponse(BaseModel):
+    case_id: str
+    clinical_history: str
+
+    class Config:
+        orm_mode = True
+
+class ValidationSubmissionRequest(BaseModel):
+    user_identifier: str = Field(..., max_length=5, min_length=5, description="Últimos 5 dígitos do CPF do usuário.")
+    case_id: str
+    user_group: str
+    answer: str
+
+class ValidationSubmissionResponse(BaseModel):
+    user_identifier: str
+    case_id: str
+    answer: str
+
+    class Config:
+        orm_mode = True
+
+class AdminActionRequest(BaseModel):
+    password: str 
