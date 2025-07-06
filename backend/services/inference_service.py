@@ -23,10 +23,10 @@ async def extract_keywords(query: str) -> list[str]:
     """Usa a IA para extrair e traduzir para o inglês os termos clínicos chave da consulta."""
     model = genai.GenerativeModel('gemini-2.5-flash')
     prompt = f"""
-    From the following clinical description, which may be in any language, identify the 2-3 most important medical or neurological keywords.
-    Crucially, **ignore laterality** (e.g., 'right', 'left', 'direita', 'esquerda') and focus only on the clinical signs themselves.
-    Then, provide the **English translation** for these keywords.
-    Return them as a comma-separated list of English words and nothing else.
+    From the following clinical description, which may be in any language, please identify all key neurological signs and symptoms.
+    Focus on the core clinical findings and ignore laterality (e.g., 'right', 'left', 'direita', 'esquerda').
+    Provide the **English translation** for these findings.
+    Return them as a comma-separated list. Be comprehensive.
     Description: "{query}"
     English Keywords:
     """
@@ -64,15 +64,15 @@ def search_chapters_for_snippets(keywords: list[str]) -> str:
     if not all_snippets:
         return "No relevant information found for the given keywords."
 
-    # Reduz o contexto em 20% para otimizar a velocidade
-    snippet_list = list(all_snippets)
-    if len(snippet_list) > 5: # Aplica a redução apenas se houver um número razoável de snippets
-        sample_size = int(len(snippet_list) * 0.8)
-        sampled_snippets = random.sample(snippet_list, k=sample_size)
-        logging.info(f"Reduced snippets from {len(snippet_list)} to {len(sampled_snippets)} for performance.")
-        return "\n".join(sampled_snippets)
+    # Não reduz mais o contexto para garantir que toda a informação relevante seja usada
+    # snippet_list = list(all_snippets)
+    # if len(snippet_list) > 5: 
+    #     sample_size = int(len(snippet_list) * 0.8)
+    #     sampled_snippets = random.sample(snippet_list, k=sample_size)
+    #     logging.info(f"Reduced snippets from {len(snippet_list)} to {len(sampled_snippets)} for performance.")
+    #     return "\n".join(sampled_snippets)
 
-    return "\n".join(snippet_list)
+    return "\n".join(all_snippets)
 
 
 async def get_syndrome_inference(query: str, context_snippets: str, image_list: list) -> dict:
@@ -91,15 +91,17 @@ async def get_syndrome_inference(query: str, context_snippets: str, image_list: 
     From the list of available images, select the most relevant one for each identified syndrome.
     Available Image Files: --- {image_list_str} ---
 
-    Your main goal is to populate two distinct lists:
-    1.  `ischemic_syndromes`: A list of exactly **four (4)** clinically distinct ISCHEMIC syndromes.
-    2.  `hemorrhagic_syndromes`: A list of exactly **one (1)** HEMORRHAGIC syndrome.
+    Your main goal is to identify the most likely neurological syndromes.
+    Populate two distinct lists:
+    1.  `ischemic_syndromes`: A list of up to **four (4)** of the most probable clinically distinct ISCHEMIC syndromes. If you are very confident in one, you can provide fewer.
+    2.  `hemorrhagic_syndromes`: A list of up to **two (2)** of the most probable HEMORRHAGIC syndromes.
 
     For each syndrome in both lists:
-    - Select **exactly one** of the most illustrative image filenames from the provided list. The filename must be an EXACT match.
+    - Provide a concise justification (`reasoning`) based ONLY on the provided context snippets.
+    - Select **exactly one** illustrative image filename from the provided list. The filename must be an EXACT match.
     - **Do not use the same image filename for more than one syndrome.**
 
-    If no relevant syndromes are found, return empty lists for both keys.
+    If no relevant syndromes are found based on the context, return empty lists.
 
     Respond **in English**, with this strict JSON format:
     {{
