@@ -14,6 +14,7 @@ services:
       # !!! IMPORTANTE: Troque pelo seu email para o Let's Encrypt !!!
       - "--certificatesresolvers.myresolver.acme.email=pardinithales@gmail.com"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.myresolver.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
       # Redireciona todo tráfego HTTP para HTTPS
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
