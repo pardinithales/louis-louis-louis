@@ -4,8 +4,9 @@ from io import StringIO
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import os
+import random
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -100,12 +101,21 @@ async def infer_syndrome(request: InferenceRequest, db: Session = Depends(get_db
         raise HTTPException(status_code=500, detail=f"Ocorreu um erro inesperado: {str(e)}")
 
 @app.get("/validation_cases/", response_model=List[ValidationCaseResponse])
-def get_validation_cases(db: Session = Depends(get_db)):
+def get_validation_cases(user_identifier: str = Query(..., description="Últimos 5 dígitos do CPF do usuário."), db: Session = Depends(get_db)):
     """
-    Retorna uma lista de todos os casos clínicos de validação armazenados.
+    Retorna 20 casos clínicos de validação aleatórios para o usuário específico.
     """
     cases = crud.get_all_validation_cases(db)
-    return cases
+    if len(cases) < 20:
+        raise HTTPException(status_code=400, detail="Não há casos suficientes para sortear 20.")
+    
+    # Usa o user_identifier como semente para reproducibilidade
+    random.seed(user_identifier)
+    
+    # Sorteia 20 casos únicos
+    selected_cases = random.sample(cases, 20)
+    
+    return selected_cases
 
 @app.post("/submit_validation_answer/")
 def submit_validation_answer(submission: ValidationSubmissionRequest, db: Session = Depends(get_db)):

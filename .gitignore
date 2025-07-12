@@ -14,3 +14,5 @@ Thumbs.db
 # Ignorar diretórios de ferramentas de desenvolvimento (se aplicável)
 .vscode/
 .idea/ 
+
+copiar_arquivos.py

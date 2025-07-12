@@ -68,6 +68,11 @@ docker-compose up -d --build
 Se a aplicação apresentar erros persistentes após uma atualização (como o `KeyError: 'ContainerConfig'`), pode ser necessário forçar uma limpeza completa do ambiente Docker. **Use este procedimento com cuidado**, pois ele apaga todos os dados em cache e os volumes.
 
 ```bash
+
+git fetch origin
+git reset --hard origin/validacao
+
+
 # 1. Navegue para o diretório do projeto
 cd /root/louis-final
 
@@ -76,4 +81,12 @@ docker-compose down --volumes --rmi all
 
 # 3. Suba tudo novamente, forçando uma reconstrução do zero
 docker-compose up -d --build
+
+docker exec -it louis-backend-prod python /app/backend/scripts/populate_db.py
 ``` 
+
+git fetch origin
+git reset --hard origin/validacao
+
+
+docker exec -it louis-backend-prod python /app/backend/scripts/populate_db.py

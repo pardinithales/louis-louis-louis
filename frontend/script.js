@@ -268,8 +268,16 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadValidationCases() {
         if (validationCaseList.childElementCount > 0) return; // Não recarregar se já estiver populado
 
+        const userIdentifier = localStorage.getItem('userIdentifier');
+        if (!userIdentifier) {
+            console.error('Identificador do usuário não encontrado para carregar os casos.');
+            validationCaseList.innerHTML = '<p>Erro: Identificador de usuário não encontrado. Por favor, complete o passo de consentimento.</p>';
+            return;
+        }
+
         try {
-            const response = await fetch(`${API_BASE_URL}/validation_cases/`);
+            // Adiciona o user_identifier como um parâmetro de query
+            const response = await fetch(`${API_BASE_URL}/validation_cases/?user_identifier=${userIdentifier}`);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const cases = await response.json();
 
