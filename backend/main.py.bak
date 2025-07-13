@@ -20,10 +20,7 @@ from .models.api_models import (
     ValidationCaseResponse,
     ValidationSubmissionRequest,
     ValidationSubmissionResponse,
-    AdminActionRequest,
-    SUSSubmissionRequest,
-    SUSSubmissionResponse,
-    SUSResponseModel
+    AdminActionRequest
 )
 from .services.inference_service import run_full_inference_process
 from .database import crud, models
@@ -46,7 +43,17 @@ app = FastAPI(
 # Configuração do CORS
 # Em produção, restrinja para o domínio específico.
 # Para desenvolvimento, permita origens locais.
-origins = ["*"]
+origins = [
+    "https://louis.tpfbrain.com",  # Domínio de produção
+    "http://localhost",
+    "http://localhost:8000",      # Porta padrão do servidor de desenvolvimento do frontend
+    "http://localhost:8001",      # Porta alternativa
+    "http://localhost:8080",      # Adicionando a porta que está em uso
+    "http://127.0.0.1",
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:8001",
+    "http://127.0.0.1:8080",      # Adicionando a porta que está em uso
+]
 
 
 # Configuração do CORS para permitir requisições de qualquer origem.
@@ -122,35 +129,12 @@ def submit_validation_answer(submission: ValidationSubmissionRequest, db: Sessio
             user_identifier=submission.user_identifier,
             case_id=submission.case_id,
             answer=submission.answer,
-            user_group=submission.user_group,
-            user_type=submission.user_type
+            user_group=submission.user_group
         )
         return {"status": "success", "message": "Resposta armazenada com sucesso."}
     except Exception as e:
         logging.error(f"Falha ao armazenar a submissão de validação: {e}")
         raise HTTPException(status_code=500, detail="Não foi possível armazenar a resposta.")
-
-@app.post("/submit_sus/", response_model=SUSSubmissionResponse)
-def submit_sus(request: SUSSubmissionRequest, db: Session = Depends(get_db)):
-    try:
-        crud.create_sus_response(
-            db=db,
-            user_identifier=request.user_identifier,
-            q1=request.q1,
-            q2=request.q2,
-            q3=request.q3,
-            q4=request.q4,
-            q5=request.q5,
-            q6=request.q6,
-            q7=request.q7,
-            q8=request.q8,
-            q9=request.q9,
-            q10=request.q10
-        )
-        return {"status": "success", "message": "Respostas do questionário SUS armazenadas com sucesso."}
-    except Exception as e:
-        logging.error(f"Falha ao armazenar as respostas SUS: {e}")
-        raise HTTPException(status_code=500, detail="Não foi possível armazenar as respostas do SUS.")
 
 @app.get("/validation_submissions/", response_model=List[ValidationSubmissionResponse])
 def get_validation_submissions(db: Session = Depends(get_db)):
@@ -175,30 +159,6 @@ def delete_validation_submissions(request: AdminActionRequest, db: Session = Dep
     except Exception as e:
         logging.error(f"Falha ao apagar submissões de validação: {e}")
         raise HTTPException(status_code=500, detail="Não foi possível apagar as respostas.")
-
-@app.get("/sus_responses/", response_model=List[SUSResponseModel])
-def get_sus_responses(db: Session = Depends(get_db)):
-    """
-    Retorna todas as respostas do questionário SUS.
-    """
-    responses = crud.get_all_sus_responses(db)
-    return responses
-
-@app.post("/delete_sus_responses/")
-def delete_sus_responses(request: AdminActionRequest, db: Session = Depends(get_db)):
-    """
-    Apaga todas as respostas do SUS se a senha estiver correta.
-    """
-    if request.password != "admin":
-        raise HTTPException(status_code=403, detail="Senha incorreta.")
-    
-    try:
-        deleted_count = crud.delete_all_sus_responses(db)
-        logging.info(f"{deleted_count} respostas SUS foram apagadas.")
-        return {"status": "success", "message": f"{deleted_count} respostas SUS foram apagadas com sucesso."}
-    except Exception as e:
-        logging.error(f"Falha ao apagar respostas SUS: {e}")
-        raise HTTPException(status_code=500, detail="Não foi possível apagar as respostas SUS.")
 
 
 # --- Constantes e Configurações ---

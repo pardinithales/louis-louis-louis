@@ -18,6 +18,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const consentAgreeBtn = document.getElementById('consent-agree-btn');
     const validationCaseList = document.getElementById('validation-case-list');
     const userGroupNotification = document.getElementById('user-group-notification');
+    const userTypeSelection = document.getElementById('user-type-selection');
+    const userTypeSelect = document.getElementById('user-type-select');
+    const userTypeError = document.getElementById('user-type-error');
+    const submitUserTypeBtn = document.getElementById('submit-user-type-btn');
+    const susQuestionnaire = document.getElementById('sus-questionnaire');
+    const susForm = document.getElementById('sus-form');
+    const submitSusBtn = document.getElementById('submit-sus-btn');
+    const susError = document.getElementById('sus-error');
+    const susSuccess = document.getElementById('sus-success');
     
     // Admin
     const adminAccessBtn = document.getElementById('admin-access-btn');
@@ -60,30 +69,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleValidationTabClick() {
         const userIdentifier = localStorage.getItem('userIdentifier');
+        console.log('DEBUG: Verificando userIdentifier:', userIdentifier);
+        
         if (userIdentifier) {
+            console.log('DEBUG: userIdentifier existe, escondendo modal de consentimento');
             consentModal.style.display = 'none';
-            // AQUI ESTÁ A CORREÇÃO:
             validationCasesContainer.style.display = 'block';
 
-            // Lê o grupo da sessão ATUAL. Se não existir, randomiza e salva.
-            let userGroup = sessionStorage.getItem('userGroup');
-            if (!userGroup) {
-                userGroup = Math.random() < 0.5 ? 'louis_group' : 'control_group';
-                sessionStorage.setItem('userGroup', userGroup);
-                console.log('Novo grupo de sessão sorteado:', userGroup); // LOG PARA DEBUG
-            }
+            const userType = localStorage.getItem('userType');
+            console.log('DEBUG: Verificando userType:', userType);
             
-            setupValidationUIForGroup(userGroup);
-            loadValidationCases();
+            if (!userType) {
+                console.log('DEBUG: userType não existe, mostrando seleção de userType');
+                console.log('DEBUG: userTypeSelection element:', userTypeSelection);
+                userTypeSelection.style.display = 'block';
+                validationCaseList.style.display = 'none';
+                susQuestionnaire.style.display = 'none';
+                console.log('DEBUG: Configurou displays - userTypeSelection: block, validationCaseList: none, susQuestionnaire: none');
+            } else {
+                console.log('DEBUG: userType já existe:', userType, '- pulando para casos');
+                userTypeSelection.style.display = 'none';
+                setupValidationUIForGroup(sessionStorage.getItem('userGroup'));
+                loadValidationCases();
+                checkAllCasesSubmitted(); // Checa se SUS deve ser mostrado
+            }
         } else {
+            console.log('DEBUG: userIdentifier não existe, mostrando modal de consentimento');
             consentModal.style.display = 'flex';
             validationCasesContainer.style.display = 'none';
         }
     }
 
     function setupValidationUIForGroup(group) {
+        console.log('DEBUG: setupValidationUIForGroup chamada com grupo:', group);
+        
+        // Lê o grupo da sessão ATUAL. Se não existir, randomiza e salva.
+        let userGroup = sessionStorage.getItem('userGroup');
+        if (!userGroup) {
+            userGroup = Math.random() < 0.5 ? 'louis_group' : 'control_group';
+            sessionStorage.setItem('userGroup', userGroup);
+            console.log('DEBUG: Novo grupo de sessão sorteado:', userGroup);
+        }
+        console.log('DEBUG: Grupo final sendo usado:', userGroup);
+        
         const inferenceTab = document.getElementById('inference-tab');
-        if (group === 'control_group') {
+        if (userGroup === 'control_group') {
             userGroupNotification.innerHTML = '<strong>Grupo Controle:</strong> Você foi selecionado para responder aos casos sem a ajuda da ferramenta de inferência. A aba "Inferência" está desativada.';
             inferenceTab.style.display = 'none'; // Esconde a aba
         } else {
@@ -137,6 +167,40 @@ document.addEventListener('DOMContentLoaded', () => {
             cpfError.style.display = 'block';
         }
     });
+
+    // Listener para submeter tipo de usuário
+    submitUserTypeBtn.addEventListener('click', () => {
+        const selectedType = userTypeSelect.value;
+        console.log('DEBUG: Tipo de usuário selecionado:', selectedType);
+        
+        if (selectedType) {
+            localStorage.setItem('userType', selectedType);
+            console.log('DEBUG: userType salvo no localStorage:', selectedType);
+            userTypeError.style.display = 'none';
+            userTypeSelection.style.display = 'none';
+            setupValidationUIForGroup(sessionStorage.getItem('userGroup'));
+            loadValidationCases();
+        } else {
+            console.log('DEBUG: Nenhum tipo selecionado, mostrando erro');
+            userTypeError.style.display = 'block';
+        }
+    });
+
+    // Função para checar se todos os casos foram submetidos
+    function checkAllCasesSubmitted() {
+        const saveButtons = document.querySelectorAll('.validation-case-item button');
+        const allSubmitted = Array.from(saveButtons).every(btn => btn.textContent === 'Salvo!');
+        console.log('DEBUG: checkAllCasesSubmitted - botões encontrados:', saveButtons.length);
+        console.log('DEBUG: checkAllCasesSubmitted - todos submetidos:', allSubmitted);
+        
+        if (allSubmitted && saveButtons.length > 0) {
+            console.log('DEBUG: Todos os casos foram submetidos, mostrando SUS');
+            susQuestionnaire.style.display = 'block';
+        } else {
+            console.log('DEBUG: Nem todos os casos foram submetidos, escondendo SUS');
+            susQuestionnaire.style.display = 'none';
+        }
+    }
 
     // --- Lógica do Admin ---
     adminAccessBtn.addEventListener('click', () => {
@@ -266,9 +330,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Carregar Casos de Validação ---
     async function loadValidationCases() {
-        if (validationCaseList.childElementCount > 0) return; // Não recarregar se já estiver populado
+        console.log('DEBUG: loadValidationCases chamada');
+        console.log('DEBUG: validationCaseList.childElementCount:', validationCaseList.childElementCount);
+        
+        if (validationCaseList.childElementCount > 0) {
+            console.log('DEBUG: Casos já carregados, pulando recarregamento');
+            return; // Não recarregar se já estiver populado
+        }
 
         const userIdentifier = localStorage.getItem('userIdentifier');
+        console.log('DEBUG: userIdentifier para carregar casos:', userIdentifier);
+        
         if (!userIdentifier) {
             console.error('Identificador do usuário não encontrado para carregar os casos.');
             validationCaseList.innerHTML = '<p>Erro: Identificador de usuário não encontrado. Por favor, complete o passo de consentimento.</p>';
@@ -276,13 +348,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
+            console.log('DEBUG: Fazendo requisição para:', `${API_BASE_URL}/validation_cases/?user_identifier=${userIdentifier}`);
+            
             // Adiciona o user_identifier como um parâmetro de query
             const response = await fetch(`${API_BASE_URL}/validation_cases/?user_identifier=${userIdentifier}`);
+            console.log('DEBUG: Response status:', response.status);
+            console.log('DEBUG: Response ok:', response.ok);
+            
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const cases = await response.json();
+            console.log('DEBUG: Casos recebidos:', cases.length, cases);
 
             validationCaseList.innerHTML = '';
-            cases.forEach(caseItem => {
+            validationCaseList.style.display = 'block'; // Garante que está visível
+            console.log('DEBUG: Limpou validationCaseList e definiu display como block');
+            
+            cases.forEach((caseItem, index) => {
+                console.log(`DEBUG: Processando caso ${index + 1}:`, caseItem.case_id);
                 const item = document.createElement('div');
                 item.className = 'validation-case-item';
                 item.innerHTML = `
@@ -296,10 +378,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 validationCaseList.appendChild(item);
             });
+            console.log('DEBUG: Todos os casos foram adicionados ao DOM');
+            
         } catch (error) {
             console.error('Falha ao carregar os casos de validação:', error);
             validationCaseList.innerHTML = '<p>Erro ao carregar casos. Tente recarregar a página.</p>';
         }
+        // Após popular validationCaseList
+        checkAllCasesSubmitted();
+        console.log('DEBUG: loadValidationCases concluída');
     }
     
     // --- Submeter Resposta de Validação ---
@@ -330,7 +417,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         user_identifier: userIdentifier,
                         case_id: caseId,
                         user_group: userGroup,
-                        answer: answer
+                        answer: answer,
+                        user_type: localStorage.getItem('userType')
                     })
                 });
 
@@ -347,12 +435,63 @@ document.addEventListener('DOMContentLoaded', () => {
                 feedbackEl.textContent = `Resposta para "${caseId}" salva com sucesso: "${answer}"`;
                 feedbackEl.style.display = 'block';
 
+                // Checa se todos os casos foram submetidos para mostrar o SUS
+                checkAllCasesSubmitted();
+
             } catch (error) {
                 console.error('Erro ao salvar resposta:', error);
                 alert(`Erro: ${error.message}`);
                 button.disabled = false;
                 button.textContent = 'Salvar Resposta';
             }
+        }
+    });
+
+    // Listener para submeter SUS
+    submitSusBtn.addEventListener('click', async () => {
+        const formData = new FormData(susForm);
+        const responses = {};
+        let complete = true;
+        for (let i = 1; i <= 10; i++) {
+            const q = formData.get(`q${i}`);
+            if (!q) {
+                complete = false;
+                break;
+            }
+            responses[`q${i}`] = parseInt(q);
+        }
+
+        if (!complete) {
+            susError.style.display = 'block';
+            return;
+        }
+
+        submitSusBtn.disabled = true;
+        submitSusBtn.textContent = 'Enviando...';
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/submit_sus/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_identifier: localStorage.getItem('userIdentifier'),
+                    ...responses
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Falha ao enviar respostas SUS.');
+            }
+
+            susError.style.display = 'none';
+            susSuccess.style.display = 'block';
+            // Opcional: Desabilitar form após submissão
+
+        } catch (error) {
+            alert(`Erro: ${error.message}`);
+        } finally {
+            submitSusBtn.disabled = false;
+            submitSusBtn.textContent = 'Enviar Respostas SUS';
         }
     });
 

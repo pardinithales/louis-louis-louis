@@ -28,4 +28,22 @@ class ValidationSubmission(Base):
     case_id = Column(String, nullable=False, index=True)
     user_group = Column(String, nullable=False) # 'louis_group' ou 'control_group'
     answer = Column(Text, nullable=False)
+    user_type = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class SUSResponse(Base):
+    __tablename__ = "sus_responses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_identifier = Column(String(5), nullable=False, index=True)
+    q1 = Column(Integer, nullable=False)
+    q2 = Column(Integer, nullable=False)
+    q3 = Column(Integer, nullable=False)
+    q4 = Column(Integer, nullable=False)
+    q5 = Column(Integer, nullable=False)
+    q6 = Column(Integer, nullable=False)
+    q7 = Column(Integer, nullable=False)
+    q8 = Column(Integer, nullable=False)
+    q9 = Column(Integer, nullable=False)
+    q10 = Column(Integer, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now()) 

@@ -15,4 +15,19 @@ Thumbs.db
 .vscode/
 .idea/ 
 
+# Ignorar arquivos de teste
+tests/
+*test*.py
+pytest.ini
+requirements-test.txt
+run_tests.py
+README_TESTS.md
+htmlcov/
+.coverage
+.pytest_cache/
+
+# Ignorar arquivos PDF
+*.pdf
+consent_forms/
+
 copiar_arquivos.py
