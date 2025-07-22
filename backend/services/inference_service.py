@@ -75,6 +75,26 @@ def search_chapters_for_snippets(keywords: list[str]) -> str:
     return "\n".join(all_snippets)
 
 
+def load_all_chapters_content() -> str:
+    """
+    Carrega todo o conteúdo de todos os capítulos em uma única string.
+    Usado como fallback quando a busca por keywords não retorna resultados suficientes.
+    """
+    all_content = []
+    chapter_files = list_available_files(CHAPTERS_DIR, '_extracted.txt')
+    
+    for filename in chapter_files:
+        try:
+            with open(os.path.join(CHAPTERS_DIR, filename), 'r', encoding='utf-8') as f:
+                content = f.read()
+                # Adiciona header do capítulo para contexto
+                all_content.append(f"\n\n=== CHAPTER: {filename} ===\n{content}")
+        except Exception as e:
+            logging.warning(f"Could not load file {filename}: {e}")
+    
+    return "\n".join(all_content)
+
+
 async def get_syndrome_inference(query: str, context_snippets: str, image_list: list) -> dict:
     """Usa o Gemini para inferir síndromes com base nos trechos e na lista de imagens."""
     model = genai.GenerativeModel(
@@ -139,6 +159,105 @@ async def get_syndrome_inference(query: str, context_snippets: str, image_list: 
         return {"ischemic_syndromes": [], "hemorrhagic_syndromes": []}
 
 
+async def get_syndrome_inference_with_full_context(query: str, full_chapters_content: str, image_list: list) -> dict:
+    """
+    Usa o Gemini para inferir síndromes usando TODO o conteúdo dos capítulos.
+    Usado quando a busca por keywords não retorna resultados suficientes.
+    """
+    model = genai.GenerativeModel(
+        model_name='gemini-2.5-flash',  # Usando mesmo modelo que funciona bem com JSON
+        generation_config={"response_mime_type": "application/json", "temperature": 0.2}
+    )
+    image_list_str = "\n".join(image_list)
+    prompt = f"""
+    Act as a neurology expert. You have been given a clinical presentation that didn't match well with keyword searches.
+    Your task is to perform a COMPREHENSIVE SEMANTIC SEARCH across ALL the neurological literature provided below.
+    
+    Clinical presentation to analyze: "{query}"
+
+    IMPORTANT INSTRUCTIONS:
+    1. Search for clinical patterns, synonyms, related symptoms, and indirect references throughout the ENTIRE content below
+    2. Consider that the query might use different terminology than the literature
+    3. Look for partial matches and related clinical findings
+    4. The syndrome names, locations, and arteries MUST come from the literature provided, not from general knowledge
+    
+    === COMPLETE NEUROLOGICAL LITERATURE DATABASE ===
+    {full_chapters_content}
+    === END OF LITERATURE DATABASE ===
+
+    Available Image Files: 
+    {image_list_str}
+
+    Your main goal is to identify the most likely neurological syndromes based on semantic matching with the literature.
+    - The syndrome `name` must be a SHORT, STANDARD name (e.g., "MCA syndrome", "Broca's aphasia"), NOT a long description
+    - For `suggested_image`, select the most relevant filename or `null`
+    - Base your reasoning on specific passages from the literature
+    
+    Populate two distinct lists:
+    1. `ischemic_syndromes`: Up to four (4) most probable ISCHEMIC syndromes
+    2. `hemorrhagic_syndromes`: Up to two (2) most probable HEMORRHAGIC syndromes
+
+    For each syndrome:
+    - Name MUST be concise (max 3-4 words), standard neurological terminology
+    - Artery and location MUST be extracted from the literature
+    - Provide reasoning that references specific content from the chapters
+    - Select one image or `null`
+
+    If after comprehensive search no relevant syndromes match the presentation, return empty lists.
+
+    Respond in this JSON format:
+    {{
+      "ischemic_syndromes": [
+        {{
+          "name": "Syndrome name from literature",
+          "artery": "Artery from literature",
+          "location": "Location from literature",
+          "reasoning": "Justification referencing specific chapter content",
+          "suggested_image": "filename.png or null"
+        }}
+      ],
+      "hemorrhagic_syndromes": [
+        {{
+          "name": "Syndrome name from literature",
+          "artery": "Artery from literature", 
+          "location": "Location from literature",
+          "reasoning": "Justification referencing specific chapter content",
+          "suggested_image": "filename.png or null"
+        }}
+      ]
+    }}
+    """
+    
+    try:
+        response = await model.generate_content_async(prompt)
+        result_text = response.text
+        
+        # Tentativa de corrigir JSON com vírgula faltando
+        if result_text.strip().endswith('],\n}') or result_text.strip().endswith('],\r\n}'):
+            # Remove vírgula extra no final
+            result_text = result_text.rstrip()
+            if result_text.endswith(',\n}'):
+                result_text = result_text[:-3] + '\n}'
+            elif result_text.endswith(',\r\n}'):
+                result_text = result_text[:-4] + '\r\n}'
+        
+        return json.loads(result_text)
+    except json.JSONDecodeError as e:
+        logging.error(f"Failed to decode JSON from Gemini response: {response.text}")
+        logging.error(f"JSON Error details: {e}")
+        
+        # Tentativa de correção mais agressiva
+        try:
+            # Remove possíveis vírgulas extras antes de }
+            fixed_text = result_text.replace(',\n}', '\n}').replace(',\r\n}', '\r\n}').replace(', }', ' }')
+            return json.loads(fixed_text)
+        except:
+            return {"ischemic_syndromes": [], "hemorrhagic_syndromes": []}
+    except Exception as e:
+        logging.error(f"Error in full context inference: {e}")
+        return {"ischemic_syndromes": [], "hemorrhagic_syndromes": []}
+
+
 async def run_full_inference_process(query: str):
     """Orquestra o novo processo de inferência baseado em RAG."""
     logging.info("Step 1: Extracting keywords from query...")
@@ -154,16 +273,34 @@ async def run_full_inference_process(query: str):
     if snippet_count > 0:
         logging.info(f"Context being sent to AI:\n{context_snippets}")
 
-    if snippet_count == 0:
-        # Lidar com o caso em que nenhum trecho é encontrado
-        return {"ischemic_syndromes": [], "hemorrhagic_syndromes": []}
-    
+    # Listar imagens disponíveis (usado em ambos os caminhos)
     logging.info("Step 3: Listing available images.")
     available_images = list_available_files(IMAGES_DIR, '.png')
     logging.info(f"Found {len(available_images)} images.")
 
-    logging.info("Step 4: Starting final, diverse syndrome inference based on snippets...")
-    inference_result = await get_syndrome_inference(query, context_snippets, available_images)
-    logging.info("Final inference complete.")
+    # Decisão: usar busca específica ou busca semântica completa
+    MIN_SNIPPETS_THRESHOLD = 3  # Threshold configurável
+    
+    if snippet_count >= MIN_SNIPPETS_THRESHOLD:
+        # Caminho normal: snippets suficientes encontrados
+        logging.info(f"Step 4: Using standard inference with {snippet_count} snippets...")
+        inference_result = await get_syndrome_inference(query, context_snippets, available_images)
+    else:
+        # Fallback: poucos ou nenhum snippet encontrado
+        logging.info(f"Step 4: Insufficient snippets ({snippet_count} < {MIN_SNIPPETS_THRESHOLD}). Loading full context for semantic search...")
+        
+        # Detectar se a query é complexa (mais de 30 palavras sugere descrição detalhada)
+        query_word_count = len(query.split())
+        if query_word_count > 30:
+            logging.info(f"Complex query detected ({query_word_count} words). Full semantic search is recommended.")
+        
+        # Carregar todo o conteúdo dos capítulos
+        full_content = load_all_chapters_content()
+        content_size_kb = len(full_content.encode('utf-8')) / 1024
+        logging.info(f"Loaded {content_size_kb:.1f}KB of chapter content for comprehensive search.")
+        
+        # Usar inferência com contexto completo
+        inference_result = await get_syndrome_inference_with_full_context(query, full_content, available_images)
+        logging.info("Full context semantic inference complete.")
     
     return inference_result 
