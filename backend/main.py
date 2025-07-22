@@ -184,6 +184,16 @@ def get_sus_responses(db: Session = Depends(get_db)):
     responses = crud.get_all_sus_responses(db)
     return responses
 
+@app.get("/sus_responses/{user_identifier}", response_model=List[SUSResponseModel])
+def get_user_sus_responses(user_identifier: str, db: Session = Depends(get_db)):
+    """
+    Retorna as respostas do questionário SUS de um usuário específico.
+    """
+    responses = db.query(models.SUSResponse).filter(
+        models.SUSResponse.user_identifier == user_identifier
+    ).order_by(models.SUSResponse.created_at).all()
+    return responses
+
 @app.post("/delete_sus_responses/")
 def delete_sus_responses(request: AdminActionRequest, db: Session = Depends(get_db)):
     """
@@ -273,20 +283,23 @@ def generate_consent_pdf(request: AdminActionRequest, db: Session = Depends(get_
 @app.post("/admin/download_csv/")
 def download_csv(request: AdminActionRequest, db: Session = Depends(get_db)):
     """
-    Gera e retorna um arquivo CSV com todas as respostas de validação,
+    Gera e retorna um arquivo CSV com todas as respostas de validação e SUS,
     com os dados pivotados.
     """
     if request.password != "admin":
         raise HTTPException(status_code=403, detail="Senha incorreta.")
 
     submissions = crud.get_all_validation_submissions(db)
+    sus_responses = crud.get_all_sus_responses(db)
+    
     if not submissions:
         raise HTTPException(status_code=404, detail="Nenhuma resposta de validação encontrada para exportar.")
 
-    # Converte os dados para um DataFrame do pandas
+    # Converte os dados de validação para um DataFrame do pandas
     data_for_df = [{
         "user_identifier": s.user_identifier,
         "user_group": s.user_group,
+        "user_type": s.user_type,
         "case_id": s.case_id,
         "answer": s.answer
     } for s in submissions]
@@ -294,7 +307,7 @@ def download_csv(request: AdminActionRequest, db: Session = Depends(get_db)):
 
     # Pivota o DataFrame para ter usuários como linhas e casos como colunas
     pivot_df = df.pivot_table(
-        index=['user_identifier', 'user_group'],
+        index=['user_identifier', 'user_group', 'user_type'],
         columns='case_id',
         values='answer',
         aggfunc='first'  # Usa 'first' para o caso de múltiplas respostas, pega a primeira
@@ -307,6 +320,34 @@ def download_csv(request: AdminActionRequest, db: Session = Depends(get_db)):
         if col.startswith("CASO CLÍNICO")
     }
     pivot_df.rename(columns=rename_dict, inplace=True)
+
+    # Adiciona dados SUS ao DataFrame
+    if sus_responses:
+        sus_data = {}
+        for sus in sus_responses:
+            user_id = sus.user_identifier
+            if user_id not in sus_data:
+                sus_data[user_id] = {
+                    f'sus_q{i}': getattr(sus, f'q{i}')
+                    for i in range(1, 11)
+                }
+                # Calcula o score SUS
+                score = 0
+                # Questões ímpares (1,3,5,7,9): contribuição = resposta - 1
+                for i in [1, 3, 5, 7, 9]:
+                    score += getattr(sus, f'q{i}') - 1
+                # Questões pares (2,4,6,8,10): contribuição = 5 - resposta
+                for i in [2, 4, 6, 8, 10]:
+                    score += 5 - getattr(sus, f'q{i}')
+                sus_data[user_id]['sus_score'] = score * 2.5
+        
+        # Converte para DataFrame e faz merge
+        sus_df = pd.DataFrame.from_dict(sus_data, orient='index')
+        sus_df.index.name = 'user_identifier'
+        sus_df.reset_index(inplace=True)
+        
+        # Merge com o DataFrame principal
+        pivot_df = pivot_df.merge(sus_df, on='user_identifier', how='left')
 
     # Cria um buffer de string para o CSV
     output = StringIO()

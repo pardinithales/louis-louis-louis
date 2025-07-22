@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewAnswersBtn = document.getElementById('view-answers-btn');
     const deleteAnswersBtn = document.getElementById('delete-answers-btn');
     const downloadCsvBtn = document.getElementById('download-csv-btn');
+    const viewSusBtn = document.getElementById('view-sus-btn');
 
     // Detecta o ambiente para definir a URL base da API
     const getApiBaseUrl = () => {
@@ -262,6 +263,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    viewSusBtn.addEventListener('click', async () => {
+        console.log('DEBUG: Botão Ver Respostas SUS clicado');
+        try {
+            const response = await fetch(`${API_BASE_URL}/sus_responses/`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Falha ao buscar as respostas SUS.');
+            }
+            const susResponses = await response.json();
+            console.log('DEBUG: Respostas SUS recebidas:', susResponses);
+            displaySUSResponses(susResponses);
+        } catch (error) {
+            console.error('DEBUG: Erro ao buscar respostas SUS:', error);
+            alert(`Erro: ${error.message}`);
+        }
+    });
+
     deleteAnswersBtn.addEventListener('click', async () => {
         const confirmation = confirm('ATENÇÃO: Isso apagará PERMANENTEMENTE todas as respostas de validação. Deseja continuar?');
         if (!confirmation) return;
@@ -328,13 +346,73 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function displaySUSResponses(susResponses) {
+        console.log('DEBUG: Exibindo respostas SUS:', susResponses.length);
+        
+        if (susResponses.length === 0) {
+            alert('Nenhuma resposta SUS foi encontrada no banco de dados.');
+            return;
+        }
+
+        // Cria o conteúdo do modal
+        let modalContentHtml = '<h1>Respostas SUS Armazenadas</h1>';
+        modalContentHtml += '<p>Total de respostas: ' + susResponses.length + '</p>';
+        
+        susResponses.forEach(response => {
+            modalContentHtml += `<div class="user-answers">`;
+            modalContentHtml += `<h4>Usuário (CPF final): ${response.user_identifier}</h4>`;
+            modalContentHtml += `<p><strong>Data:</strong> ${new Date(response.created_at).toLocaleString('pt-BR')}</p>`;
+            modalContentHtml += `<div class="answer-item">`;
+            for (let i = 1; i <= 10; i++) {
+                modalContentHtml += `<p><strong>Q${i}:</strong> ${response[`q${i}`]}</p>`;
+            }
+            // Calcular pontuação SUS
+            const susScore = calculateSUSScore(response);
+            modalContentHtml += `<p><strong>Pontuação SUS:</strong> ${susScore}/100</p>`;
+            modalContentHtml += `</div></div>`;
+        });
+
+        // Cria e exibe o modal
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.id = 'view-sus-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close-button" style="float: right; cursor: pointer; font-size: 1.5rem;">&times;</span>
+                ${modalContentHtml}
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        modal.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('close-button')) {
+                document.body.removeChild(modal);
+            }
+        });
+    }
+
+    function calculateSUSScore(response) {
+        let score = 0;
+        // Questões ímpares (1,3,5,7,9): contribuição = resposta - 1
+        for (let i of [1, 3, 5, 7, 9]) {
+            score += response[`q${i}`] - 1;
+        }
+        // Questões pares (2,4,6,8,10): contribuição = 5 - resposta
+        for (let i of [2, 4, 6, 8, 10]) {
+            score += 5 - response[`q${i}`];
+        }
+        // Multiplicar por 2.5 para obter o score de 0-100
+        return score * 2.5;
+    }
+
     // --- Carregar Casos de Validação ---
     async function loadValidationCases() {
         console.log('DEBUG: loadValidationCases chamada');
         console.log('DEBUG: validationCaseList.childElementCount:', validationCaseList.childElementCount);
         
         if (validationCaseList.childElementCount > 0) {
-            console.log('DEBUG: Casos já carregados, pulando recarregamento');
+            console.log('DEBUG: Casos já carregados, verificando se todos foram submetidos');
+            checkAllCasesSubmitted(); // Verifica o status mesmo se já carregado
             return; // Não recarregar se já estiver populado
         }
 
@@ -359,21 +437,44 @@ document.addEventListener('DOMContentLoaded', () => {
             const cases = await response.json();
             console.log('DEBUG: Casos recebidos:', cases.length, cases);
 
+            // Buscar submissões já realizadas pelo usuário
+            let userSubmissions = [];
+            try {
+                const submissionsResponse = await fetch(`${API_BASE_URL}/validation_submissions/`);
+                if (submissionsResponse.ok) {
+                    const allSubmissions = await submissionsResponse.json();
+                    // Filtrar apenas as submissões do usuário atual
+                    userSubmissions = allSubmissions.filter(sub => sub.user_identifier === userIdentifier);
+                    console.log('DEBUG: Submissões do usuário encontradas:', userSubmissions.length);
+                }
+            } catch (error) {
+                console.error('Erro ao buscar submissões:', error);
+            }
+
+            // Criar um mapa de casos já respondidos
+            const answeredCases = {};
+            userSubmissions.forEach(sub => {
+                answeredCases[sub.case_id] = sub.answer;
+            });
+
             validationCaseList.innerHTML = '';
             validationCaseList.style.display = 'block'; // Garante que está visível
             console.log('DEBUG: Limpou validationCaseList e definiu display como block');
             
             cases.forEach((caseItem, index) => {
                 console.log(`DEBUG: Processando caso ${index + 1}:`, caseItem.case_id);
+                const isAnswered = answeredCases.hasOwnProperty(caseItem.case_id);
+                const previousAnswer = answeredCases[caseItem.case_id] || '';
+                
                 const item = document.createElement('div');
                 item.className = 'validation-case-item';
                 item.innerHTML = `
                     <h3>${caseItem.case_id}</h3>
                     <p>${caseItem.clinical_history}</p>
                     <div class="validation-answer-area">
-                        <textarea id="answer-${caseItem.case_id}" placeholder="Digite sua hipótese aqui..."></textarea>
-                        <button class="button-primary" data-case-id="${caseItem.case_id}">Salvar Resposta</button>
-                        <p class="submission-feedback" style="display: none;"></p>
+                        <textarea id="answer-${caseItem.case_id}" placeholder="Exemplo de resposta estruturada:&#10;&#10;Hipótese diagnóstica: Síndrome de Wallenberg&#10;Artéria afetada: Artéria cerebelar póstero-inferior (PICA)&#10;Localização anatômica: Bulbo lateral&#10;&#10;Descreva sua análise de forma clara e organizada." ${isAnswered ? 'disabled' : ''}>${previousAnswer}</textarea>
+                        <button class="button-primary" data-case-id="${caseItem.case_id}" ${isAnswered ? 'style="background-color: #28a745;"' : ''}>${isAnswered ? 'Salvo!' : 'Salvar Resposta'}</button>
+                        <p class="submission-feedback" style="${isAnswered ? 'display: block;' : 'display: none;'}">${isAnswered ? `Resposta para "${caseItem.case_id}" salva com sucesso: "${previousAnswer}"` : ''}</p>
                     </div>
                 `;
                 validationCaseList.appendChild(item);
@@ -449,47 +550,77 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listener para submeter SUS
     submitSusBtn.addEventListener('click', async () => {
+        console.log('DEBUG: Botão SUS clicado');
         const formData = new FormData(susForm);
         const responses = {};
         let complete = true;
+        
+        // Debug: verificar cada resposta
         for (let i = 1; i <= 10; i++) {
             const q = formData.get(`q${i}`);
+            console.log(`DEBUG: q${i} = ${q}`);
             if (!q) {
                 complete = false;
+                console.log(`DEBUG: Questão q${i} não respondida`);
                 break;
             }
             responses[`q${i}`] = parseInt(q);
         }
 
+        console.log('DEBUG: Formulário completo?', complete);
+        console.log('DEBUG: Respostas coletadas:', responses);
+
         if (!complete) {
             susError.style.display = 'block';
+            console.log('DEBUG: Mostrando erro de formulário incompleto');
             return;
         }
+
+        const userIdentifier = localStorage.getItem('userIdentifier');
+        console.log('DEBUG: userIdentifier para SUS:', userIdentifier);
 
         submitSusBtn.disabled = true;
         submitSusBtn.textContent = 'Enviando...';
 
+        const requestData = {
+            user_identifier: userIdentifier,
+            ...responses
+        };
+        console.log('DEBUG: Dados a serem enviados:', requestData);
+
         try {
-            const response = await fetch(`${API_BASE_URL}/submit_sus/`, {
+            const url = `${API_BASE_URL}/submit_sus/`;
+            console.log('DEBUG: Enviando para:', url);
+            
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_identifier: localStorage.getItem('userIdentifier'),
-                    ...responses
-                })
+                body: JSON.stringify(requestData)
             });
 
+            console.log('DEBUG: Response status:', response.status);
+            console.log('DEBUG: Response ok:', response.ok);
+
             if (!response.ok) {
-                throw new Error('Falha ao enviar respostas SUS.');
+                const errorData = await response.json();
+                console.error('DEBUG: Erro na resposta:', errorData);
+                throw new Error(errorData.detail || 'Falha ao enviar respostas SUS.');
             }
+
+            const successData = await response.json();
+            console.log('DEBUG: Resposta de sucesso:', successData);
 
             susError.style.display = 'none';
             susSuccess.style.display = 'block';
-            // Opcional: Desabilitar form após submissão
+            console.log('DEBUG: SUS enviado com sucesso!');
+            
+            // Desabilitar o formulário após submissão bem-sucedida
+            susForm.querySelectorAll('input').forEach(input => input.disabled = true);
+            submitSusBtn.disabled = true;
 
         } catch (error) {
+            console.error('DEBUG: Erro ao enviar SUS:', error);
             alert(`Erro: ${error.message}`);
-        } finally {
             submitSusBtn.disabled = false;
             submitSusBtn.textContent = 'Enviar Respostas SUS';
         }
@@ -592,4 +723,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return section;
     }
-}); 
+});

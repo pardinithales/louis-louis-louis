@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
+from datetime import datetime
 
 class InferenceRequest(BaseModel):
     query: str
@@ -77,4 +78,4 @@ class SUSResponseModel(BaseModel):
     q8: int
     q9: int
     q10: int
-    created_at: str 
+    created_at: datetime 

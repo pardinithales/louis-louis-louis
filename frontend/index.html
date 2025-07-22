@@ -93,8 +93,17 @@
 
                 <div id="user-group-notification" class="submission-feedback" style="display: none; margin-bottom: 1rem;"></div>
                 <h2>Casos Clínicos para Validação</h2>
-                <p>Digite sua hipótese diagnóstica para cada caso e clique em "Salvar Resposta".</p>
                 
+                <div class="validation-cases-instructions">
+                    <p><strong>Para cada caso, forneça uma análise completa incluindo:</strong></p>
+                    <ul style="margin-bottom: 1.5rem; line-height: 1.6;">
+                        <li><strong>Hipótese diagnóstica:</strong> Síndrome vascular ou diagnóstico principal</li>
+                        <li><strong>Artéria afetada:</strong> Território vascular comprometido</li>
+                        <li><strong>Localização anatômica:</strong> Estrutura ou região cerebral lesionada</li>
+                    </ul>
+                    <p style="margin-bottom: 0;"><em>Observação: Quando não houver uma síndrome específica bem estabelecida, você pode usar denominações anatômicas descritivas (ex: "síndrome do bulbo lateral", "lesão pontina paramediana", etc.).</em></p>
+                </div>
+
                 <div class="admin-access-container">
                     <button id="admin-access-btn">Acessar área administrativa</button>
                 </div>
@@ -103,6 +112,7 @@
                     <h3>Painel Administrativo</h3>
                     <button id="view-answers-btn">Ver Respostas Armazenadas</button>
                     <button id="download-csv-btn">Download Dataset (CSV)</button>
+                    <button id="view-sus-btn">Ver Respostas SUS</button>
                     <button id="delete-answers-btn" class="danger-btn">Apagar Todas as Respostas</button>
                 </div>
 

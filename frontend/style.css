@@ -416,12 +416,27 @@ footer {
 
 .validation-answer-area textarea {
     width: 100%;
-    min-height: 80px;
-    padding: 0.5rem;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    margin-bottom: 0.5rem;
+    min-height: 120px;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
     font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    resize: vertical;
+    transition: border-color 0.3s ease;
+}
+
+.validation-answer-area textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(13, 59, 102, 0.1);
+}
+
+.validation-answer-area textarea::placeholder {
+    color: #666;
+    font-style: italic;
+    line-height: 1.4;
 }
 
 .validation-answer-area button {
@@ -754,3 +769,33 @@ footer {
         padding: 1.5rem;
     }
 } 
+
+/* Validation Cases Instructions */
+.validation-cases-instructions {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-left: 4px solid var(--primary-color);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.validation-cases-instructions ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.validation-cases-instructions li {
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.validation-cases-instructions strong {
+    color: var(--primary-color);
+}
+
+.validation-cases-instructions em {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* Validation Cases */ 
