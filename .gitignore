@@ -31,3 +31,8 @@ htmlcov/
 consent_forms/
 
 copiar_arquivos.py
+
+# Documentação privada do Claude Code (contém credenciais)
+CLAUDE.md
+CHECKPOINT.md
+SETUP.md
