@@ -5,6 +5,7 @@ import random # Importa o módulo random
 from google import genai
 from google.genai import types
 from ..core.config import GEMINI_API_KEY, CHAPTERS_DIR, IMAGES_DIR
+from .reranker import reranker
 
 # ============================================================================
 # MIGRAÇÃO PARA SDK NOVO - 05/Out/2025
@@ -290,7 +291,7 @@ async def get_syndrome_inference_with_full_context(query: str, full_chapters_con
 
 
 async def run_full_inference_process(query: str):
-    """Orquestra o novo processo de inferência baseado em RAG."""
+    """Orquestra o novo processo de inferência baseado em RAG com reranking."""
     logging.info("Step 1: Extracting keywords from query...")
     keywords = await extract_keywords(query)
     logging.info(f"Extracted keywords: {keywords}")
@@ -299,10 +300,6 @@ async def run_full_inference_process(query: str):
     context_snippets = search_chapters_for_snippets(keywords)
     snippet_count = len(context_snippets.split('--- Snippet from')) - 1
     logging.info(f"Found {snippet_count} relevant snippets.")
-    
-    # Log para visibilidade do contexto exato enviado para a IA
-    if snippet_count > 0:
-        logging.info(f"Context being sent to AI:\n{context_snippets}")
 
     # Listar imagens disponíveis (usado em ambos os caminhos)
     logging.info("Step 3: Listing available images.")
@@ -311,10 +308,35 @@ async def run_full_inference_process(query: str):
 
     # Decisão: usar busca específica ou busca semântica completa
     MIN_SNIPPETS_THRESHOLD = 3  # Threshold configurável
-    
+
     if snippet_count >= MIN_SNIPPETS_THRESHOLD:
-        # Caminho normal: snippets suficientes encontrados
-        logging.info(f"Step 4: Using standard inference with {snippet_count} snippets...")
+        # Step 3.5: NOVO - Reranking semântico para filtrar top-k snippets mais relevantes
+        logging.info("Step 3.5: Reranking snippets by semantic relevance...")
+
+        # Separar snippets individuais
+        all_snippets = [s.strip() for s in context_snippets.split('--- Snippet from') if s.strip()]
+
+        # Se temos mais de 5 snippets, aplicar reranking
+        if len(all_snippets) > 5:
+            logging.info(f"Reranking {len(all_snippets)} snippets to top-5 most relevant...")
+            filtered_snippets = reranker.rerank_simple(
+                query=query,
+                snippets=all_snippets,
+                top_k=5
+            )
+            logging.info(f"Reranking complete: {len(all_snippets)} → {len(filtered_snippets)} snippets")
+
+            # Reconstruir formato original dos snippets
+            context_snippets = '\n\n'.join(filtered_snippets)
+            snippet_count = len(filtered_snippets)
+        else:
+            logging.info(f"Skipping reranking: only {len(all_snippets)} snippets (≤5)")
+
+        # Log do contexto final enviado para a IA
+        logging.info(f"Final context being sent to AI ({snippet_count} snippets):\n{context_snippets}")
+
+        # Caminho normal: snippets suficientes encontrados (agora rerankeados)
+        logging.info(f"Step 4: Using standard inference with {snippet_count} reranked snippets...")
         inference_result = await get_syndrome_inference(query, context_snippets, available_images)
     else:
         # Fallback: poucos ou nenhum snippet encontrado
