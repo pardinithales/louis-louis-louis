@@ -26,14 +26,85 @@
         </div>
 
         <div class="tab-content active" id="inference-content">
-            <h1>Louis - Sistema de Inferência Neurológica</h1>
-            <textarea id="clinical-case" placeholder="Cole aqui o quadro clínico..."></textarea>
-            <button id="submit-btn">Analisar</button>
-            <div id="loader" class="loader" style="display: none;">
-                <p>Analisando o caso clínico... Isso pode levar alguns segundos.</p>
+            <!-- Seção Sobre o Projeto -->
+            <div class="about-section">
+                <h2>Sobre o LouIS</h2>
+                <p class="about-description">
+                    Sistema de inferência baseado em <strong>inteligência artificial</strong> para auxiliar no
+                    <strong>diagnóstico sindrômico e topográfico em Neurologia Vascular</strong>.
+                    Desenvolvido no HC-FMRP/USP, utiliza técnicas avançadas de RAG (Retrieval-Augmented Generation)
+                    sobre uma base de conhecimento de 52 capítulos especializados.
+                </p>
+
+                <div class="about-cards">
+                    <div class="about-card">
+                        <div class="card-icon">🧠</div>
+                        <h3>Como Funciona</h3>
+                        <p>Digite uma descrição clínica e a IA analisa sintomas, identifica padrões neurológicos e sugere até 4 síndromes isquêmicas e 2 hemorrágicas mais prováveis.</p>
+                    </div>
+
+                    <div class="about-card">
+                        <div class="card-icon">⚡</div>
+                        <h3>Tecnologia</h3>
+                        <p>Powered by Google Gemini 2.5 Flash com reranking semântico. Processa ~20s por inferência com 91.7% de redução de contexto irrelevante.</p>
+                    </div>
+
+                    <div class="about-card">
+                        <div class="card-icon">🎯</div>
+                        <h3>Validação Científica</h3>
+                        <p>Estudo aprovado pelo CEP HC-FMRP/USP. Acesse a aba "Validação" para participar da pesquisa e contribuir com a ciência.</p>
+                    </div>
+                </div>
             </div>
-            <!-- Container de Resultados REINSERIDO AQUI -->
-            <div id="results-container"></div>
+
+            <!-- Seção de Inferência -->
+            <div class="inference-section">
+                <h1>Analisar Caso Clínico</h1>
+
+                <!-- Exemplos de casos -->
+                <div class="examples-section">
+                    <p class="examples-label">
+                        <strong>💡 Exemplos:</strong> Clique para testar
+                    </p>
+                    <div class="examples-buttons">
+                        <button class="example-btn" data-example="1">
+                            Exemplo 1: AVC Isquêmico
+                        </button>
+                        <button class="example-btn" data-example="2">
+                            Exemplo 2: Síndrome Lacunar
+                        </button>
+                        <button class="example-btn" data-example="3">
+                            Exemplo 3: AVC Hemorrágico
+                        </button>
+                    </div>
+                </div>
+
+                <div class="input-container">
+                    <label for="clinical-case">Descrição do Caso Clínico:</label>
+                    <textarea
+                        id="clinical-case"
+                        placeholder="Ex: Paciente de 65 anos com início súbito de hemiparesia esquerda, afasia de expressão, desvio de olhar conjugado para direita e negligência espacial esquerda..."
+                        rows="6"
+                    ></textarea>
+                    <div class="char-counter">
+                        <span id="char-count">0</span> caracteres
+                    </div>
+                </div>
+
+                <button id="submit-btn" class="submit-button">
+                    <span class="button-icon">🔍</span>
+                    Analisar com IA
+                </button>
+
+                <div id="loader" class="loader" style="display: none;">
+                    <div class="loader-spinner"></div>
+                    <p>Analisando caso clínico...</p>
+                    <p class="loader-detail">Isso pode levar ~20 segundos</p>
+                </div>
+
+                <!-- Container de Resultados -->
+                <div id="results-container"></div>
+            </div>
         </div>
 
         <div class="tab-content" id="validation-content">
@@ -81,11 +152,26 @@
                     <p>Por favor, selecione a opção que melhor descreve sua especialidade e experiência.</p>
                     <select id="user-type-select">
                         <option value="">-- Selecione --</option>
-                        <option value="Neurologista Vascular">Neurologista Vascular</option>
-                        <option value="Neurologista Geral">Neurologista Geral</option>
-                        <option value="Neurologista Expert">Neurologista Expert</option>
-                        <option value="Residente de Neurologia (anos 1-3)">Residente de Neurologia (anos 1-3)</option>
-                        <option value="Residente de Neurocirurgia (primeiro ano)">Residente de Neurocirurgia (primeiro ano)</option>
+                        <optgroup label="Neurologia">
+                            <option value="Neurologista Vascular">Neurologista Vascular</option>
+                            <option value="Neurologista Geral">Neurologista Geral</option>
+                            <option value="Neurologista Expert">Neurologista Expert</option>
+                            <option value="Residente de Neurologia R1">Residente de Neurologia (R1)</option>
+                            <option value="Residente de Neurologia R2">Residente de Neurologia (R2)</option>
+                            <option value="Residente de Neurologia R3">Residente de Neurologia (R3)</option>
+                        </optgroup>
+                        <optgroup label="Neurocirurgia">
+                            <option value="Neurocirurgião">Neurocirurgião</option>
+                            <option value="Residente de Neurocirurgia R1">Residente de Neurocirurgia (R1)</option>
+                            <option value="Residente de Neurocirurgia R2">Residente de Neurocirurgia (R2)</option>
+                            <option value="Residente de Neurocirurgia R3">Residente de Neurocirurgia (R3)</option>
+                            <option value="Residente de Neurocirurgia R4">Residente de Neurocirurgia (R4)</option>
+                            <option value="Residente de Neurocirurgia R5">Residente de Neurocirurgia (R5)</option>
+                        </optgroup>
+                        <optgroup label="Outros">
+                            <option value="Estudante de Medicina">Estudante de Medicina</option>
+                            <option value="Médico Generalista">Médico Generalista</option>
+                        </optgroup>
                     </select>
                     <button id="submit-user-type-btn" class="button-primary">Continuar</button>
                     <p id="user-type-error" class="error-message" style="display: none;">Por favor, selecione uma opção.</p>

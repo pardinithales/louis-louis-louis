@@ -4,11 +4,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.getElementById('submit-btn');
     const loader = document.getElementById('loader');
     const resultsContainer = document.getElementById('results-container');
-    
+
     // Abas
     const tabs = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
     const validationTab = document.getElementById('validation-tab');
+
+    // Novos elementos da interface moderna
+    const exampleButtons = document.querySelectorAll('.example-btn');
+    const charCount = document.getElementById('char-count');
 
     // Validação
     const consentModal = document.getElementById('validation-consent-modal');
@@ -48,6 +52,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const API_BASE_URL = getApiBaseUrl();
 
     // As variáveis de sessão/usuário agora são lidas dentro das funções para garantir que estão sempre atualizadas.
+
+    // --- Exemplos de Casos Clínicos ---
+    const clinicalExamples = {
+        '1': 'Paciente de 65 anos com início súbito de hemiparesia esquerda, afasia de expressão, desvio de olhar conjugado para direita e negligência espacial esquerda. Não responde a comandos verbais complexos. Reflexos tendinosos aumentados à esquerda.',
+        '2': 'Homem de 58 anos, hipertenso, apresentou início agudo de disartria e hemiparesia direita desproporcional (predomina em membro superior direito). Reflexos osteotendinosos vivos à direita. Sem alterações de sensibilidade. TAC de crânio sem lesões visíveis.',
+        '3': 'Mulher de 72 anos com cefaleia holocraniana intensa de início súbito, seguida de rebaixamento do nível de consciência (Glasgow 10), rigidez de nuca e sinais de irritação meníngea. Pupila direita midriática e não fotorreagente.'
+    };
+
+    // Event listeners para botões de exemplo
+    if (exampleButtons) {
+        exampleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const exampleId = button.getAttribute('data-example');
+                if (clinicalExamples[exampleId]) {
+                    clinicalCaseTextarea.value = clinicalExamples[exampleId];
+                    // Atualizar contador de caracteres
+                    updateCharCount();
+                    // Scroll suave até o textarea
+                    clinicalCaseTextarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Destacar temporariamente
+                    clinicalCaseTextarea.style.borderColor = '#667eea';
+                    setTimeout(() => {
+                        clinicalCaseTextarea.style.borderColor = '';
+                    }, 1000);
+                }
+            });
+        });
+    }
+
+    // Contador de caracteres
+    function updateCharCount() {
+        if (charCount && clinicalCaseTextarea) {
+            const count = clinicalCaseTextarea.value.length;
+            charCount.textContent = count;
+        }
+    }
+
+    // Atualizar contador quando usuário digita
+    if (clinicalCaseTextarea && charCount) {
+        clinicalCaseTextarea.addEventListener('input', updateCharCount);
+        // Inicializar contador
+        updateCharCount();
+    }
 
     // --- Lógica das Abas ---
     tabs.forEach(tab => {
