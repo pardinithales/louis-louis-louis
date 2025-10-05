@@ -11,18 +11,13 @@ services:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      # !!! IMPORTANTE: Troque pelo seu email para o Let's Encrypt !!!
       - "--certificatesresolvers.myresolver.acme.email=pardinithales@gmail.com"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-      - "--certificatesresolvers.myresolver.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory"
-      # Redireciona todo tráfego HTTP para HTTPS
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
     ports:
-      # Portas para tráfego web (HTTP e HTTPS)
       - "80:80"
       - "443:443"
-      # Porta para o Dashboard do Traefik (opcional, para debug)
       - "8080:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
@@ -45,7 +40,6 @@ services:
       - louis_net
     labels:
       - "traefik.enable=true"
-      # Nova regra: Roteia para o backend se o Host for app-louis.tpfbrain.com
       - "traefik.http.routers.louis-backend.rule=Host(`app-louis.tpfbrain.com`)"
       - "traefik.http.routers.louis-backend.entrypoints=websecure"
       - "traefik.http.routers.louis-backend.tls.certresolver=myresolver"
@@ -75,4 +69,5 @@ volumes:
 
 networks:
   louis_net:
-    driver: bridge 
+    driver: bridge
+
