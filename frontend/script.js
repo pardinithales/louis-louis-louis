@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 console.log('DEBUG: userType já existe:', userType, '- pulando para casos');
                 userTypeSelection.style.display = 'none';
-                setupValidationUIForGroup(sessionStorage.getItem('userGroup'));
+                setupValidationUIForGroup(localStorage.getItem('userGroup'));
                 loadValidationCases();
                 checkAllCasesSubmitted(); // Checa se SUS deve ser mostrado
             }
@@ -101,27 +101,69 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    /**
+     * Atribui um grupo ao usuário baseado no user_identifier (determinístico)
+     * Garante que o mesmo CPF sempre cai no mesmo grupo (50/50 balanceado)
+     */
+    function assignUserGroup(userIdentifier) {
+        // Hash simples: soma dos char codes dos dígitos do CPF
+        const hash = userIdentifier.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        // Usa módulo 2 para balancear 50/50
+        return hash % 2 === 0 ? 'louis_group' : 'control_group';
+    }
+
     function setupValidationUIForGroup(group) {
         console.log('DEBUG: setupValidationUIForGroup chamada com grupo:', group);
-        
-        // Lê o grupo da sessão ATUAL. Se não existir, randomiza e salva.
-        let userGroup = sessionStorage.getItem('userGroup');
+
+        // Busca o grupo do localStorage (persistente por usuário)
+        let userGroup = localStorage.getItem('userGroup');
+
         if (!userGroup) {
-            userGroup = Math.random() < 0.5 ? 'louis_group' : 'control_group';
-            sessionStorage.setItem('userGroup', userGroup);
-            console.log('DEBUG: Novo grupo de sessão sorteado:', userGroup);
+            // Se não existe, atribui baseado no CPF (determinístico)
+            const userIdentifier = localStorage.getItem('userIdentifier');
+            if (userIdentifier) {
+                userGroup = assignUserGroup(userIdentifier);
+                localStorage.setItem('userGroup', userGroup);
+                console.log('DEBUG: Novo grupo atribuído (determinístico):', userGroup, 'para usuário:', userIdentifier);
+            } else {
+                console.error('ERRO: userIdentifier não encontrado ao tentar atribuir grupo');
+                return;
+            }
         }
+
         console.log('DEBUG: Grupo final sendo usado:', userGroup);
-        
+
         const inferenceTab = document.getElementById('inference-tab');
         if (userGroup === 'control_group') {
-            userGroupNotification.innerHTML = '<strong>Grupo Controle:</strong> Você foi selecionado para responder aos casos sem a ajuda da ferramenta de inferência. A aba "Inferência" está desativada.';
+            userGroupNotification.innerHTML = `
+                <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                    <strong>📋 Grupo Controle</strong>
+                    <p style="margin: 8px 0 0 0;">Você foi selecionado para responder aos casos <strong>baseado apenas em seu conhecimento clínico</strong>.</p>
+                    <p style="margin: 8px 0 0 0; color: #856404;">⚠️ A aba "Inferência" está desabilitada para seu grupo.</p>
+                </div>
+            `;
             inferenceTab.style.display = 'none'; // Esconde a aba
         } else {
-            userGroupNotification.innerHTML = '<strong>Grupo Louis:</strong> Você pode usar a aba "Inferência" para consultar a IA antes de submeter suas respostas.';
+            userGroupNotification.innerHTML = `
+                <div style="background: #d1ecf1; padding: 15px; border-radius: 8px; border-left: 4px solid #17a2b8;">
+                    <strong>🤖 Grupo Louis (IA)</strong>
+                    <p style="margin: 8px 0 0 0;"><strong>INSTRUÇÕES IMPORTANTES:</strong></p>
+                    <ol style="margin: 8px 0 0 0; padding-left: 20px;">
+                        <li>Para cada caso, clique na aba <strong>"Inferência"</strong></li>
+                        <li>Cole o texto do caso clínico no campo de entrada</li>
+                        <li>Clique em "Enviar" e aguarde os resultados da IA</li>
+                        <li>Analise as síndromes sugeridas pela ferramenta</li>
+                        <li>Retorne à aba "Validação" e submeta sua resposta</li>
+                    </ol>
+                    <p style="margin: 8px 0 0 0; color: #0c5460;"><strong>⚠️ É obrigatório usar a ferramenta Louis antes de responder cada caso.</strong></p>
+                </div>
+            `;
             inferenceTab.style.display = 'block'; // Garante que a aba está visível
         }
         userGroupNotification.style.display = 'block';
+
+        // Remove sessionStorage (não mais necessário)
+        sessionStorage.removeItem('userGroup');
     }
 
     consentAgreeBtn.addEventListener('click', async () => {
@@ -179,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('DEBUG: userType salvo no localStorage:', selectedType);
             userTypeError.style.display = 'none';
             userTypeSelection.style.display = 'none';
-            setupValidationUIForGroup(sessionStorage.getItem('userGroup'));
+            setupValidationUIForGroup(localStorage.getItem('userGroup'));
             loadValidationCases();
         } else {
             console.log('DEBUG: Nenhum tipo selecionado, mostrando erro');
@@ -494,7 +536,7 @@ document.addEventListener('DOMContentLoaded', () => {
     validationCaseList.addEventListener('click', async (e) => {
         if (e.target.tagName === 'BUTTON' && e.target.dataset.caseId) {
             const userIdentifier = localStorage.getItem('userIdentifier');
-            const userGroup = sessionStorage.getItem('userGroup'); // Garante que pegamos o valor mais atual
+            const userGroup = localStorage.getItem('userGroup'); // Grupo persistente por usuário
             const button = e.target;
             const caseId = button.dataset.caseId;
             const answerTextarea = document.getElementById(`answer-${caseId}`);
