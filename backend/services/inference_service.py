@@ -2,11 +2,34 @@ import os
 import json
 import logging
 import random # Importa o módulo random
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from ..core.config import GEMINI_API_KEY, CHAPTERS_DIR, IMAGES_DIR
 
-# Configura o cliente do Gemini
-genai.configure(api_key=GEMINI_API_KEY)
+# ============================================================================
+# MIGRAÇÃO PARA SDK NOVO - 05/Out/2025
+# ============================================================================
+# Configura o cliente do Gemini (SDK novo)
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+# Configuração para thinking desabilitado (latência otimizada)
+NO_THINKING_CONFIG = types.GenerateContentConfig(
+    thinking_config=types.ThinkingConfig(thinking_budget=0),
+    temperature=0.2,
+    top_p=0.95,
+    top_k=40,
+)
+
+# Configuração para JSON com thinking desabilitado
+JSON_NO_THINKING_CONFIG = types.GenerateContentConfig(
+    thinking_config=types.ThinkingConfig(thinking_budget=0),
+    response_mime_type="application/json",
+    temperature=0.2,
+    top_p=0.95,
+    top_k=40,
+)
+
+logging.info("✅ Gemini client initialized with SDK novo (thinking disabled for optimal latency)")
 
 def list_available_files(directory: str, extension: str) -> list:
     """Lista todos os arquivos com uma determinada extensão em um diretório."""
@@ -21,7 +44,7 @@ def list_available_files(directory: str, extension: str) -> list:
 
 async def extract_keywords(query: str) -> list[str]:
     """Usa a IA para extrair e traduzir para o inglês os termos clínicos chave da consulta."""
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    # SDK NOVO: Nota - API é síncrona, mas podemos usar em contexto async
     prompt = f"""
     From the following clinical description, which may be in any language, please identify all key neurological signs and symptoms.
     Focus on the core clinical findings and ignore laterality (e.g., 'right', 'left', 'direita', 'esquerda').
@@ -30,7 +53,11 @@ async def extract_keywords(query: str) -> list[str]:
     Description: "{query}"
     English Keywords:
     """
-    response = await model.generate_content_async(prompt)
+    response = client.models.generate_content(
+        model="gemini-flash-latest",
+        contents=prompt,
+        config=NO_THINKING_CONFIG
+    )
     keywords = [k.strip() for k in response.text.split(',')]
     return [k for k in keywords if k] # Remove strings vazias
 
@@ -97,10 +124,7 @@ def load_all_chapters_content() -> str:
 
 async def get_syndrome_inference(query: str, context_snippets: str, image_list: list) -> dict:
     """Usa o Gemini para inferir síndromes com base nos trechos e na lista de imagens."""
-    model = genai.GenerativeModel(
-        model_name='gemini-2.5-flash',
-        generation_config={"response_mime_type": "application/json", "temperature": 0.2}
-    )
+    # SDK NOVO: usa client com JSON config e thinking desabilitado
     image_list_str = "\n".join(image_list)
     prompt = f"""
     Act as a neurology expert. Analyze the clinical presentation: "{query}".
@@ -149,7 +173,12 @@ async def get_syndrome_inference(query: str, context_snippets: str, image_list: 
       ]
     }}
     """
-    response = await model.generate_content_async(prompt)
+    # SDK NOVO: chamada síncrona (API não tem versão async)
+    response = client.models.generate_content(
+        model="gemini-flash-latest",
+        contents=prompt,
+        config=JSON_NO_THINKING_CONFIG
+    )
     try:
         # Tenta carregar o JSON e retorna o dicionário que será validado pelo Pydantic
         return json.loads(response.text)
@@ -164,10 +193,7 @@ async def get_syndrome_inference_with_full_context(query: str, full_chapters_con
     Usa o Gemini para inferir síndromes usando TODO o conteúdo dos capítulos.
     Usado quando a busca por keywords não retorna resultados suficientes.
     """
-    model = genai.GenerativeModel(
-        model_name='gemini-2.5-flash',  # Usando mesmo modelo que funciona bem com JSON
-        generation_config={"response_mime_type": "application/json", "temperature": 0.2}
-    )
+    # SDK NOVO: usa client com JSON config e thinking desabilitado
     image_list_str = "\n".join(image_list)
     prompt = f"""
     Act as a neurology expert. You have been given a clinical presentation that didn't match well with keyword searches.
@@ -227,9 +253,14 @@ async def get_syndrome_inference_with_full_context(query: str, full_chapters_con
       ]
     }}
     """
-    
+
     try:
-        response = await model.generate_content_async(prompt)
+        # SDK NOVO: chamada síncrona (API não tem versão async)
+        response = client.models.generate_content(
+            model="gemini-flash-latest",
+            contents=prompt,
+            config=JSON_NO_THINKING_CONFIG
+        )
         result_text = response.text
         
         # Tentativa de corrigir JSON com vírgula faltando
